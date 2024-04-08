@@ -15,7 +15,7 @@ const int nodeType_End = 3;
 const int MAX_Level = 8;
 const double Jump_Probability = 0.5;
 
-
+// structure definition of node and skiplist
 template <typename K, typename V>
 struct Node{
     K key;
