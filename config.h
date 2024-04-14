@@ -17,3 +17,15 @@
 
 // SSTable: Limitation(16*1024)
 #define sstable_maxSize 16384
+
+// Log: Path
+#define logFilePath "./WAL.log"
+
+// MemTable: Delete Tag
+#define delete_tag "~DELETED~"
+
+// MemTable: Already Deleted
+#define memtable_already_deleted "~![ERROR] ALREADY DELETED!~"
+
+// MemTable: Not Found
+#define memtable_not_exist "~![ERROR] MemTable No Exist!~"

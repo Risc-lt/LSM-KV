@@ -1,6 +1,8 @@
 #pragma once
 #include "skiplist.h"
 #include "utils.h"
+#include "config.h"
+#include <fstream>
 #include <list>
 
 class MemTable {
@@ -8,7 +10,7 @@ private:
     // Use skiplist as container
     Skiplist<uint64_t, std::string>* skiplist;
     // Size of memtable when transferred to sstable
-    size_t size;
+    size_t sstSpaceSize;
 
     // Internal functions
     void putKV(uint64_t key, const std::string &s);
@@ -38,10 +40,10 @@ public:
     void reset();
 
     // Scan key-value pairs in memtable
-    void scan(uint64_t key1, uint64_t key2, std::map<uint64_t, std::string> &resultMap);
+    std::list<std::pair<uint64_t, std::string>> scan(uint64_t key1, uint64_t key2);
 
     // Copy all key-value pairs in memtable to sstable
-    void copyAll(std::list<std::pair<uint64_t, std::string>> &list);
+    std::list<std::pair<uint64_t, std::string>> copyAll();
 
     // Print all key-value pairs in memtable
     void tranverse(){this->skiplist->tranverse();};
