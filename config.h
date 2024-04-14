@@ -29,3 +29,9 @@
 
 // MemTable: Not Found
 #define memtable_not_exist "~![ERROR] MemTable No Exist!~"
+
+// vLog: Exceed Limit
+#define sstvalue_outOfRange "~![ERROR] Exceed Limit!~"
+
+// vLog: No File to read
+#define sstvalue_readFile_file "~![ERROR] No File!~"

@@ -9,14 +9,14 @@
 #include "utils.h"
 
 class vLogEntry{
-private:
+public:
+    // vLog entry fields
     uint8_t Magic;
     uint16_t Checksum;
     uint64_t Key;
     uint32_t vlen;
     std::string Value;
 
-public:
     // Default constructor
     vLogEntry(){Magic = 0xff;};
 
@@ -46,12 +46,12 @@ public:
     std::string getVal(size_t index);
 
     // Insert a new value
-    void insert(std::string newVal);
+    void insert(uint64_t Key, std::string newVal);
 
     // Write the vLog to a file
-    uint32_t writeToFile(std::string path, uint32_t offset);
+    uint64_t writeToFile(std::string path, uint64_t offset);
     // Read the vLog from a file
-    std::string getValFromFile(std::string path, uint32_t offset, size_t length);
+    std::string getValFromFile(std::string path, uint64_t offset, size_t length);
 
     // Default constructor and destructor
     vLog(){valNum = 0;};
