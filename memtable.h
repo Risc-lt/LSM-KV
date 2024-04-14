@@ -1,6 +1,6 @@
 #pragma once
 #include "skiplist.h"
-#include <cstdint>
+#include "utils.h"
 #include <list>
 
 class MemTable {
