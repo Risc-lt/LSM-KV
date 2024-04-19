@@ -1,6 +1,5 @@
 #pragma once
 #include "skiplist.h"
-#include "utils.h"
 #include "config.h"
 #include <fstream>
 #include <list>

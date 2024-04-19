@@ -1,11 +1,25 @@
 #pragma once
 
 #include "kvstore_api.h"
+#include "sstable.h"
+#include "memtable.h"
+#include <map>
+#include <cstdint>
+
 
 class KVStore : public KVStoreAPI
 {
 	// You can add your implementation here
 private:
+	// Path to the directory storing the sstable
+	std::string dataDir;
+	// Limit of each level
+	std::map<uint64_t, uint64_t> levelLimit;
+	// Type of the sstable: ssTable[lebel-i][timeStamp].sst
+	std::map<uint64_t, std::map<uint64_t, SStable*>> ssTable;
+
+
+
 public:
 	KVStore(const std::string &dir);
 

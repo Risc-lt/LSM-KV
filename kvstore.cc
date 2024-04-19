@@ -1,5 +1,8 @@
 #include "kvstore.h"
+#include "config.h"
 #include <string>
+#include <sstream>
+#include <chrono>
 
 KVStore::KVStore(const std::string &dir) : KVStoreAPI(dir)
 {
