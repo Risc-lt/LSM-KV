@@ -13,7 +13,6 @@ private:
     // Data part
     std::string path;           // Path of the sstable file
     uint32_t fileSize;          // Size of the sstable file
-    bool cachePolicy[4];        // Cache status of the sstable
 
     // Consruction part
     SSTheader * header = NULL;
@@ -26,20 +25,15 @@ private:
     SSTIndex * getIndexPtr();
     vLogEntry * getValuePtr();
 
-    // Save cache status in case of being changed subtly
-    void saveCachePolicy(bool (&saveTarget)[4]);
-
 public:
-
-    void refreshCachePolicy(bool setCachePolicy[4]);
     
     // Init a SStable from a file
-    SStable(std::string path, bool cachePolicy[4]);
+    SStable(std::string path);
 
     // Init a SStable from a list
     SStable(uint64_t setTimeStamp, 
         std::list <std::pair<uint64_t, std::string> > &list,
-        std::string setPath, bool cachePolicy[4]);
+        std::string setPath);
     
 
     // Test function
