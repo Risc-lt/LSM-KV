@@ -21,12 +21,6 @@ private:
     BloomFilter<uint64_t, sstable_bfSize > * bloomFliter = NULL;
     SSTIndex * index = NULL;
 
-    // Inner fuctions
-    SSTheader * getHeaderPtr();
-    BloomFilter<uint64_t, sstable_bfSize >* getBloomFliterPtr();
-    SSTIndex * getIndexPtr();
-    vLogEntry * getValuePtr();
-
 public:
     
     // Init a SStable from a file
@@ -36,15 +30,11 @@ public:
     SStable(uint64_t setTimeStamp, 
         std::list <std::pair<uint64_t, std::string> > &list,
         std::string setPath);
-    
 
-    // Test function
-    void devTest();
-
-    // Clear the cache
+    // Clear all the data
     void clear();
 
-    // Get the value of the key from the sstable
+    // Get the target from the sstable
     uint64_t getSStableTimeStamp();
     uint64_t getSStableMinKey();
     uint64_t getSStableMaxKey();
@@ -53,14 +43,11 @@ public:
     uint64_t getSStableKey(size_t index);
     uint32_t getSStableKeyOffset(size_t index);
     uint32_t getKeyIndexByKey(uint64_t key);
-    uint32_t getKeyOrLargerIndexByKey(uint64_t key);
     std::string getSStableValue(size_t index);
-
 
     bool checkIfKeyExist(uint64_t targetKey);
 
-    void scan(uint64_t key1, uint64_t key2, std::map<uint64_t, std::map<uint64_t, std::string> >  &scanMap);
-
+    std::list<std::pair<uint64_t, std::string>> scan(uint64_t key1, uint64_t key2);
 
     SStable();
     ~SStable();
