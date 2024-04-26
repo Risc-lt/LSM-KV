@@ -5,6 +5,8 @@
 #include "sstindex.h"
 #include "vlog.h"
 #include "config.h"
+#include <string>
+#include <cstdint>
 #include <list>
 #include <map>
 
