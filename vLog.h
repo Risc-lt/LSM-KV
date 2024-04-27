@@ -5,6 +5,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <list>
 #include "config.h"
 #include "utils.h"
 
@@ -52,6 +53,8 @@ public:
     uint64_t writeToFile(std::string path, uint64_t offset);
     // Read the vLog from a file
     std::string getValFromFile(std::string path, uint64_t offset, size_t length);
+    // Read the vLog from a list
+    void readFromList(std::list<std::pair<uint64_t, std::string>>);
 
     // Default constructor and destructor
     vLog(){valNum = 0;};

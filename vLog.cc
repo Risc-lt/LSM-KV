@@ -107,3 +107,16 @@ std::string vLog::getValFromFile(std::string path, uint64_t offset, size_t lengt
 
     return res;
 }
+
+// Read the vLog from a list
+void vLog::readFromList(std::list<std::pair<uint64_t, std::string>> list){
+    for(auto iter = list.begin(); iter != list.end(); iter++){
+        // Skip empty values
+        if(iter->second.size() == 0)
+            continue;
+
+        // Create a new vLogEntry
+        vLogEntry entry(iter->first, iter->second);
+        this->entries.push_back(entry);
+    }
+}
