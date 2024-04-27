@@ -161,6 +161,7 @@ bool MemTable::putCheck(uint64_t key, const std::string &s) {
 std::list<std::pair<uint64_t, std::string>> MemTable::copyAll() {
     std::list<std::pair<uint64_t, std::string>> list;
     this->skiplist->copyAll(list);
+    return list;
 }
 
 // Write log

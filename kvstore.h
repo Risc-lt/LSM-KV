@@ -1,11 +1,33 @@
 #pragma once
 
 #include "kvstore_api.h"
+#include "sstable.h"
+#include "memtable.h"
 
 class KVStore : public KVStoreAPI
 {
 	// You can add your implementation here
 private:
+
+	// Directory for storing sstables
+	std::string dir;
+	// Limited number of sstable in each level
+	std::map<uint64_t, std::string> levelLimit;
+	// Index of sstable in each level: levelIndex[level-i][timestamp] = sstable
+	std::map<uint64_t, std::map<uint64_t, SStable*> > levelIndex;
+	// Memtable
+	MemTable* memtable;
+
+	// Maintain the current timestamp
+	uint64_t timestamp = 0;
+
+	// Check all the files in the directory 
+	void sstFileCheck(std::string path);
+
+	// Compact the sstable in level i
+	int mergeCheck();
+	void merge(int level);
+
 public:
 	KVStore(const std::string &dir);
 

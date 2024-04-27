@@ -331,7 +331,7 @@ void Skiplist<K, V>::deleteNode(K elemKey){
             if(level_next->type == nodeType_Head){
                 std::cout << "Error: head again\n" << iter->key << std::endl;
                 this->tranverse();
-                exiit(0);
+                exit(0);
             }
 
             // if the key of the next node is what we search for
