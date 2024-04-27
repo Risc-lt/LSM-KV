@@ -18,6 +18,9 @@
 // SSTable: Limitation(16*1024)
 #define sstable_maxSize 16384
 
+// SSTable: Out of Range
+#define sstable_out_of_range "~![ERROR] Out of Range!~"
+
 // Log: Path
 #define logFilePath "./WAL.log"
 

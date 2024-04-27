@@ -1,5 +1,6 @@
 #include "sstable.h"
-#include "util.h"
+#include "config.h"
+#include "utils.h"
 #include <cstddef>
 #include <cstdint>
 
@@ -29,7 +30,7 @@ SStable::SStable(std::string path){
 SStable::SStable(
     uint64_t setTimeStamp,
     std::list <std::pair<uint64_t, std::string> > &list,
-    std::string setPath){
+    std::string setPath, uint32_t curvLogOffset){
     
     this->path = setPath;
     this->header = new SSTheader();
@@ -37,7 +38,7 @@ SStable::SStable(
     this->index = new SSTIndex();
 
     // Init the offset in vlog
-    uint64_t vLogOffset = 0;
+    uint64_t vLogOffset = curvLogOffset;
 
     // Set the header and bloom filter
     this->header->timeStamp = setTimeStamp;
@@ -53,9 +54,8 @@ SStable::SStable(
         this->bloomFliter->insert(iter->first);
         this->index->insert(iter->first, vLogOffset, iter->second.size());
 
-        // Update the vLogOffset
-        vLogOffset += writeVLogEntry(iter->second, setPath);
-        // TODO: Insert the value into the vlogFIXME:
+        // Update the vLogOffset: Magic(1Byte) + Checksum(2Byte) + Key(8Byte) + vlen(4Byte) + Value
+        vLogOffset += 15 + iter->second.size();
     }
 
     this->header->minKey = MinKey;
@@ -129,29 +129,29 @@ bool SStable::checkIfKeyExist(uint64_t targetKey){
     return this->bloomFliter->find(targetKey);
 }
 
-// Scan the sstable
-std::list<std::pair<uint64_t, std::string>> SStable::scan(uint64_t key1, uint64_t key2){
-    // Store the pair into the list
-    std::list<std::pair<uint64_t, std::string>> SSTList;
+// // Scan the sstable
+// std::list<std::pair<uint64_t, std::string>> SStable::scan(uint64_t key1, uint64_t key2){
+//     // Store the pair into the list
+//     std::list<std::pair<uint64_t, std::string>> SSTList;
 
-    // Get the start index of keys
-    uint32_t index1 = this->getKeyIndexByKey(key1);
-    uint32_t index2 = this->getKeyIndexByKey(key2);
+//     // Get the start index of keys
+//     uint32_t index1 = this->getKeyIndexByKey(key1);
+//     uint32_t index2 = this->getKeyIndexByKey(key2);
 
-    // Check if the keys are within the range
-    if(index1 == UINT32_MAX || index2 == UINT32_MAX)
-        return;
+//     // Check if the keys are within the range
+//     if(index1 == UINT32_MAX || index2 == UINT32_MAX)
+//         return SSTList;
 
-    // Traverse the sstable and get the key-value pairs
-    for(uint32_t i = 0; i <= this->getSStableKeyValNum(); i++){
-        // Get the key and value
-        uint64_t key = this->getSStableKey(i);
-        std::string value = this->getSStableValue(i);
+//     // Traverse the sstable and get the key-value pairs
+//     for(uint32_t i = 0; i <= this->getSStableKeyValNum(); i++){
+//         // Get the key and value
+//         uint64_t key = this->getSStableKey(i);
+//         std::string value = this->getSStableValue(i);
 
-        // Check if the key is within the range
-        if(key >= key1 && key <= key2 && value != "")
-            SSTList.push_back(std::make_pair(key, value));
-    }
+//         // Check if the key is within the range
+//         if(key >= key1 && key <= key2 && value != "")
+//             SSTList.push_back(std::make_pair(key, value));
+//     }
 
-    return SSTList;
-}
+//     return SSTList;
+// }

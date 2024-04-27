@@ -44,7 +44,7 @@ public:
     size_t getValNum() {return this->valNum;};
 
     // Get the value at the index
-    std::string getVal(size_t index);
+    std::string getValbyOffset(uint32_t offset);
 
     // Insert a new value
     void insert(uint64_t Key, std::string newVal);

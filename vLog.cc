@@ -64,11 +64,12 @@ void vLog::insert(uint64_t Key, std::string newVal){
 }
 
 // Get the value at the index
-std::string vLog::getVal(size_t index){
-    if(index > this->valNum)
+std::string vLog::getValbyOffset(uint32_t offset){
+    // Check if the offset is out of range
+    if(offset > this->entries.size())
         return sstvalue_outOfRange;
 
-    return this->entries[index].Value;
+    
 }
 
 // Get the value from a file

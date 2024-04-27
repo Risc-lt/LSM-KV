@@ -3,6 +3,7 @@
 #include "kvstore_api.h"
 #include "sstable.h"
 #include "memtable.h"
+#include <sys/types.h>
 
 class KVStore : public KVStoreAPI
 {
@@ -13,13 +14,22 @@ private:
 	std::string dir;
 	// Limited number of sstable in each level
 	std::map<uint64_t, std::string> levelLimit;
-	// Index of sstable in each level: levelIndex[level-i][timestamp] = sstable
+	// Index of sstable in each level
 	std::map<uint64_t, std::map<uint64_t, SStable*> > levelIndex;
+	
+	/****************************************************
+		levelIndex[level-i][timestamp] = sstable
+	****************************************************/
+
 	// Memtable
 	MemTable* memtable;
 
+	// vLog
+	vLog* vlog;
+	uint32_t vlogOffset;
+
 	// Maintain the current timestamp
-	uint64_t timestamp = 0;
+	uint64_t sstMaxTimeStamp = 0;
 
 	// Check all the files in the directory 
 	void sstFileCheck(std::string path);

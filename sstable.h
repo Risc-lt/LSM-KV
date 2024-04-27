@@ -29,7 +29,7 @@ public:
     // Init a SStable from a list
     SStable(uint64_t setTimeStamp, 
         std::list <std::pair<uint64_t, std::string> > &list,
-        std::string setPath);
+        std::string setPath, uint32_t curvLogOffset);
 
     // Clear all the data
     void clear();
@@ -43,11 +43,11 @@ public:
     uint64_t getSStableKey(size_t index);
     uint32_t getSStableKeyOffset(size_t index);
     uint32_t getKeyIndexByKey(uint64_t key);
-    std::string getSStableValue(size_t index);
+    // std::string getSStableValue(size_t index);
 
     bool checkIfKeyExist(uint64_t targetKey);
 
-    std::list<std::pair<uint64_t, std::string>> scan(uint64_t key1, uint64_t key2);
+    // std::list<std::pair<uint64_t, std::string>> scan(uint64_t key1, uint64_t key2);
 
     SStable();
     ~SStable();
