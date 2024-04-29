@@ -151,8 +151,9 @@ std::string KVStore::get(uint64_t key)
 					continue;
 
 				// Get the value
-
-				std::string value = this->vlog->readValue(currentSSTable->getSStableKeyOffset(indexRes));
+				uint64_t targetOffset = currentSSTable->getSStableKeyOffset(indexRes);
+				uint32_t targetLength = currentSSTable->getSStableKeyVlen(indexRes);
+				std::string value = this->vlog->getValFromFile(this->vLogdir, targetOffset, targetLength);
 				if(value == sstable_out_of_range)
 					return "";
 				if(currentSSTable->getSStableTimeStamp() >= latestTimeStamp){
@@ -170,6 +171,10 @@ std::string KVStore::get(uint64_t key)
 	}
 
 	// 
+	if(res == delete_tag || res == memtable_not_exist)
+		return "";
+	else
+		return res;
 }
 /**
  * Delete the given key-value pair if it exists.

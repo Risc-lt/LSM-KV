@@ -1,7 +1,6 @@
 #include "sstable.h"
 #include "config.h"
 #include "utils.h"
-#include <cstddef>
 #include <cstdint>
 
 // Default Constructor
@@ -107,8 +106,8 @@ uint64_t SStable::getSStableKeyValNum(){
     return this->header->keyValNum;
 }
 
-uint64_t SStable::getSStableKey(size_t index){
-    return this->index->getKey(index);
+uint32_t SStable::getSStableKeyVlen(uint64_t index){
+    return this->index->getVlen(index);
 }
     
 uint64_t SStable::getSStableKeyOffset(uint64_t index){

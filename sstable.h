@@ -40,7 +40,7 @@ public:
     uint64_t getSStableMaxKey();
     uint64_t getSStableKeyValNum();
 
-    uint64_t getSStableKey(size_t index);
+    uint32_t getSStableKeyVlen(size_t index);
     uint64_t getSStableKeyOffset(size_t index);
     uint64_t getKeyIndexByKey(uint64_t key);
     // std::string getSStableValue(size_t index);
