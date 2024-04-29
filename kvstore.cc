@@ -240,12 +240,10 @@ void KVStore::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, s
 	// Scan the memtable
 	this->memtable->scan(key1, key2, mergeList);
 
-	// 把结果返回
+	// Merge the list
 	for(auto iter = mergeList.begin(); iter != mergeList.end(); iter++){
 		list.push_back({iter->first, iter->second});
 	}
-
-
 }
 
 /**
