@@ -220,7 +220,32 @@ void KVStore::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, s
 {
 	// scanMap[key][timestamp] = value
 	std::map<uint64_t, std::map<uint64_t, std::string> > scanMap;
-	std::map<uint64_t, std::string> map;
+	std::list<std::pair<uint64_t, std::string> >mergeList;
+
+	// Scan the sstables in levelIndex
+	for(auto level = this->levelIndex.begin(); level != this->levelIndex.end(); level++){
+		for(auto sstable = level->second.begin(); sstable != level->second.end(); sstable++){
+			SStable *currentSSTable = sstable->second;
+			currentSSTable->scan(key1, key2, scanMap, *this->vlog);
+		}
+	}
+
+	for(auto iter = scanMap.begin(); iter != scanMap.end(); iter++){
+		uint64_t key = iter->first;
+		for(auto iter2 = iter->second.begin(); iter2 != iter->second.end(); iter2++){
+			list.push_back({key, iter2->second});
+		}
+	}
+
+	// Scan the memtable
+	this->memtable->scan(key1, key2, mergeList);
+
+	// 把结果返回
+	for(auto iter = mergeList.begin(); iter != mergeList.end(); iter++){
+		list.push_back({iter->first, iter->second});
+	}
+
+
 }
 
 /**

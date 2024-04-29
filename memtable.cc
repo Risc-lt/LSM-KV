@@ -121,9 +121,7 @@ void MemTable::reset() {
 }
 
 // Interface: SCAN(Key1, Key2)
-std::list<std::pair<uint64_t, std::string>> MemTable::scan(uint64_t key1, uint64_t key2) {
-    // Initialize the result list
-    std::list<std::pair<uint64_t, std::string>> resultList;
+void MemTable::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, std::string>> &list) {
     // Start scanning from key1
     Node<uint64_t, std::string> *iter = this->skiplist->find(key1);
     
@@ -131,10 +129,10 @@ std::list<std::pair<uint64_t, std::string>> MemTable::scan(uint64_t key1, uint64
     while (iter->type == nodeType_Data && iter->key <= key2) {
         // Check if the value is already deleted
         if(iter->value != delete_tag)
-            resultList.push_back(std::make_pair(iter->key, iter->value));
+            list.push_back(std::make_pair(iter->key, iter->value));
         iter = iter->next[0];
     }
-    return resultList;
+    return;
 }
 
 // Check if the memtable is full before inserting key-value pair

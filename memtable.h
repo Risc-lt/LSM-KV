@@ -40,7 +40,7 @@ public:
     void reset();
 
     // Scan key-value pairs in memtable
-    std::list<std::pair<uint64_t, std::string>> scan(uint64_t key1, uint64_t key2);
+    void scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, std::string>> &list);
 
     // Copy all key-value pairs in memtable to sstable
     std::list<std::pair<uint64_t, std::string>> copyAll();
