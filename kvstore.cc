@@ -145,13 +145,13 @@ std::string KVStore::get(uint64_t key)
 			SStable *currentSSTable = sstable->second;
 			// Check if the key is in the sstable
 			if(currentSSTable->checkIfKeyExist(key)){
-				uint32_t indexRes = currentSSTable->getKeyIndexByKey(key);
+				uint64_t indexRes = currentSSTable->getKeyIndexByKey(key);
 				// If not found, continue
-				if(indexRes == UINT32_MAX)
+				if(indexRes == UINT64_MAX)
 					continue;
 
 				// Get the value
-				
+
 				std::string value = this->vlog->readValue(currentSSTable->getSStableKeyOffset(indexRes));
 				if(value == sstable_out_of_range)
 					return "";

@@ -30,7 +30,7 @@ SStable::SStable(std::string path){
 SStable::SStable(
     uint64_t setTimeStamp,
     std::list <std::pair<uint64_t, std::string> > &list,
-    std::string setPath, uint32_t curvLogOffset){
+    std::string setPath, uint64_t curvLogOffset){
     
     this->path = setPath;
     this->header = new SSTheader();
@@ -111,11 +111,11 @@ uint64_t SStable::getSStableKey(size_t index){
     return this->index->getKey(index);
 }
     
-uint32_t SStable::getSStableKeyOffset(size_t index){
+uint64_t SStable::getSStableKeyOffset(uint64_t index){
     return this->index->getOffset(index);
 }
 
-uint32_t SStable::getKeyIndexByKey(uint64_t key){
+uint64_t SStable::getKeyIndexByKey(uint64_t key){
     return this->index->getIndex(key);
 }
 

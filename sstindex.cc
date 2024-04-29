@@ -128,18 +128,18 @@ uint64_t SSTIndex::getVlen(uint64_t index) {
 // Get index by key
 uint64_t SSTIndex::getIndex(uint64_t key) {
     if(this->keyNum == 0)
-        return UINT32_MAX;
+        return UINT64_MAX;
 
     // keyVec is strictly increasing because the MemTable is sorted when transformed to SSTable
     if(key < keyVec[0])
         return 0;
     if(key > keyVec[keyNum - 1])
-        return UINT32_MAX;
+        return UINT64_MAX;
 
     // Binary search
     uint64_t left = 0, right = keyVec.size() - 1;
     uint64_t mid = 0;
-    uint64_t findIndex = UINT32_MAX;
+    uint64_t findIndex = UINT64_MAX;
     bool ifFind = false;
     while(left <= right){
         mid = left + ((right - left) / 2);
@@ -157,5 +157,5 @@ uint64_t SSTIndex::getIndex(uint64_t key) {
     if(ifFind)
         return findIndex;
     else
-        return UINT32_MAX;
+        return UINT64_MAX;
 }

@@ -27,7 +27,7 @@ private:
 
 	// vLog
 	vLog* vlog;
-	uint32_t curvLogOffset;
+	uint64_t curvLogOffset;
 
 	// Maintain the current timestamp
 	uint64_t sstMaxTimeStamp = 0;

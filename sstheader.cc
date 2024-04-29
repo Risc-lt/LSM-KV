@@ -1,14 +1,14 @@
 #include "sstheader.h"
 
 // Constructor
-SSTheader::SSTheader(std::string path, uint32_t offset) {
+SSTheader::SSTheader(std::string path, uint64_t offset) {
     if(readFile(path, offset) != 0) {
         std::cerr << "[Error] Failure of constructing sstheader" << std::endl;
     }
 }
 
 // Load the SST header from a file
-int SSTheader::readFile(std::string path, uint32_t offset) {
+int SSTheader::readFile(std::string path, uint64_t offset) {
     std::ifstream inFile(path, std::ios::in | std::ios::binary);
     if(!inFile)
         return -1;
@@ -16,7 +16,7 @@ int SSTheader::readFile(std::string path, uint32_t offset) {
     // Move the file pointer to the offset
     inFile.seekg(0,std::ios::end);
     // Get the file size
-    uint32_t fileLimit = inFile.tellg();
+    uint64_t fileLimit = inFile.tellg();
 
     // Check if the offset is out of bounds
     if(offset > fileLimit || offset + sizeof(SSTheader) > fileLimit){
@@ -41,9 +41,9 @@ int SSTheader::readFile(std::string path, uint32_t offset) {
 }
 
 // Save the SST header to a file
-uint32_t SSTheader::writeToFile(std::string path, uint32_t offset) {
+uint64_t SSTheader::writeToFile(std::string path, uint64_t offset) {
     bool isFileExists = false;
-    uint32_t fileLimit = 0;
+    uint64_t fileLimit = 0;
     std::ifstream inFile(path, std::ios::in | std::ios::binary);
 
     // Check if the file exists

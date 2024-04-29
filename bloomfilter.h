@@ -19,20 +19,20 @@ public:
     bool find(K key);
 
     // Load the bloom filter from a file
-    int readFile(std::string path, uint32_t offset);
+    int readFile(std::string path, uint64_t offset);
     // Save the bloom filter to a file
-    uint32_t writeToFile(std::string path, uint32_t offset);
+    uint64_t writeToFile(std::string path, uint64_t offset);
 
     // Constructor
     BloomFilter(){};
-    BloomFilter(std::string path, uint32_t offset);
+    BloomFilter(std::string path, uint64_t offset);
     // Destructor
     ~BloomFilter(){};
 };
 
 // Parameterized constructor
 template <typename K, size_t Size>
-BloomFilter<K, Size>::BloomFilter(std::string path, uint32_t offset) {
+BloomFilter<K, Size>::BloomFilter(std::string path, uint64_t offset) {
     readFile(path, offset);
 }
 
@@ -40,7 +40,7 @@ BloomFilter<K, Size>::BloomFilter(std::string path, uint32_t offset) {
 template <typename K, size_t Size>
 void BloomFilter<K, Size>::insert(K key) {
     // Hash the key
-    uint32_t hash[4];
+    uint64_t hash[4];
     MurmurHash3_x64_128(&key, sizeof(K), 0, hash);
     this->bloomfilterData.set(0, 1);
 
@@ -54,7 +54,7 @@ void BloomFilter<K, Size>::insert(K key) {
 template <typename K, size_t Size>
 bool BloomFilter<K, Size>::find(K key) {
     // Hash the key
-    uint32_t hash[4];
+    uint64_t hash[4];
     MurmurHash3_x64_128(&key, sizeof(K), 1, hash);
 
     // Check if the key is in the bloom filter
@@ -68,7 +68,7 @@ bool BloomFilter<K, Size>::find(K key) {
 
 // Load the bloom filter from a file
 template <typename K, size_t Size>
-int BloomFilter<K, Size>::readFile(std::string path, uint32_t offset) {
+int BloomFilter<K, Size>::readFile(std::string path, uint64_t offset) {
     // Open the binary file in read mode
     std::ifstream inFile(path, std::ios::in | std::ios::binary);
     // Return -1 if the file cannot be opened
@@ -77,7 +77,7 @@ int BloomFilter<K, Size>::readFile(std::string path, uint32_t offset) {
     
     // Move the file pointer to the end
     inFile.seekg(0, std::ios::end);
-    uint32_t fileLimit = inFile.tellg();
+    uint64_t fileLimit = inFile.tellg();
 
     // Return -2 if the offset is out of bounds
     if(offset > fileLimit || Size + offset > fileLimit){
@@ -95,10 +95,10 @@ int BloomFilter<K, Size>::readFile(std::string path, uint32_t offset) {
 
 // Save the bloom filter to a file
 template <typename K, size_t Size>
-uint32_t BloomFilter<K, Size>::writeToFile(std::string path, uint32_t offset) {
+uint64_t BloomFilter<K, Size>::writeToFile(std::string path, uint64_t offset) {
     // Open the binary file in write mode
     bool isFileExists = false;
-    uint32_t fileLimit = 0;
+    uint64_t fileLimit = 0;
     std::ifstream inFile(path, std::ios::in | std::ios::binary);
 
     if(inFile){
