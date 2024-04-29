@@ -8,20 +8,21 @@
 KVStore::KVStore(const std::string &dir) : KVStoreAPI(dir)
 {
 	// Initialize the directory and timestamp
-	this->dir = dir;
+	this->SSTdir = dir;
+	this->vLogdir = dir + "/vLog";
 	this->sstMaxTimeStamp = 0;
 
 	// Read all the sstables and write them into levelIndex
-	this->sstFileCheck(dir);
+	this->sstFileCheck(this->SSTdir);
 
 	// Initialize the memtable
 	this->memtable = new MemTable();
 
 	// Initialize the vlog
-	this->vlog = new vLog();
+	this->vlog = new vLog(this->vLogdir);
 
 	// Initialize the vlog offset
-	this->vlogOffset = 0;
+	this->curvLogOffset = 0;
 }
 
 KVStore::~KVStore()
@@ -40,8 +41,8 @@ KVStore::~KVStore()
 		this->sstMaxTimeStamp++;
 
 		// Generate the filename
-		std::string newFilePath = this->dir + "/level-0/" + std::to_string(nstime.count()) + ".sst";
-		SStable* newSSTable = new SStable(sstMaxTimeStamp, dataAll,  newFilePath, vlogOffset);
+		std::string newFilePath = this->SSTdir + "/level-0/" + std::to_string(nstime.count()) + ".sst";
+		SStable* newSSTable = new SStable(sstMaxTimeStamp, dataAll,  newFilePath, curvLogOffset);
 
 		// Update the levelIndex
 		this->levelIndex[0][nstime.count()] = newSSTable;
@@ -77,7 +78,7 @@ KVStore::~KVStore()
  */
 void KVStore::put(uint64_t key, const std::string &s)
 {
-	// Check if the key is in the memtable
+	// Insert if the memtable is not full
 	if(this->memtable->putCheck(key, s)){
 		this->memtable->put(key, s);
 		return;
@@ -95,15 +96,16 @@ void KVStore::put(uint64_t key, const std::string &s)
 	this->sstMaxTimeStamp++;
 
 	// Generate the filename
-	std::string newFilePath = this->dir + "/level-0/" + std::to_string(mstime.count()) + ".sst";
-	SStable* newSSTable = new SStable(sstMaxTimeStamp, dataAll,  newFilePath, vlogOffset);
+	std::string newFilePath = this->SSTdir + "/level-0/" + std::to_string(mstime.count()) + ".sst";
+	SStable* newSSTable = new SStable(sstMaxTimeStamp, dataAll,  newFilePath, curvLogOffset);
 
 	// Update the levelIndex
 	this->levelIndex[0][mstime.count()] = newSSTable;
 
 	// Add the key-value pair into the vlog
 	this->vlog->readFromList(dataAll);
-	this->vlogOffset = this->vlog->writeToFile(this->dir + "/vlog", this->vlogOffset);
+	this->vlog->writeToFile(curvLogOffset);
+	this->curvLogOffset = this->vlog->getHead();
 	
 	// Reset the memtable
 	this->memtable->reset();
@@ -149,6 +151,7 @@ std::string KVStore::get(uint64_t key)
 					continue;
 
 				// Get the value
+				
 				std::string value = this->vlog->readValue(currentSSTable->getSStableKeyOffset(indexRes));
 				if(value == sstable_out_of_range)
 					return "";

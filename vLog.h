@@ -56,27 +56,26 @@ public:
 
 class vLog{
 private:
-    uint64_t valNum;
+    std::string path;
+    uint64_t tail, head;
     std::vector<vLogEntry> entries;
 
 public:
     //  Get the number of values in the vLog
-    size_t getValNum() {return this->valNum;};
-
-    // Get the value at the index
-    std::string getValbyOffset(uint32_t offset);
+    uint64_t getHead(){return head;};
+    uint64_t getTail(){return tail;};
 
     // Insert a new value
     void insert(uint64_t Key, std::string newVal);
 
     // Write the vLog to a file
-    uint64_t writeToFile(std::string path, uint64_t offset);
+    uint64_t writeToFile(uint64_t offset);
     // Read the vLog from a file
-    std::string getValFromFile(std::string path, uint64_t offset, size_t length);
+    std::string getValFromFile(std::string path, uint64_t offset, uint32_t length);
     // Read the vLog from a list
     void readFromList(std::list<std::pair<uint64_t, std::string>>);
 
     // Default constructor and destructor
-    vLog(){valNum = 0;};
+    vLog(std::string path);
     ~vLog(){};
 };

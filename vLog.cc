@@ -2,11 +2,18 @@
 #include <cstdint>
 #include <fstream>
 
+// Constructor
+vLog::vLog(std::string path){
+    this->path = path;
+    this->tail = 0;
+    this->head = 0;
+}
+
 // Write the vLog to a file
-uint64_t vLog::writeToFile(std::string path, uint64_t offset){
+uint64_t vLog::writeToFile(uint64_t offset){
     bool ifFileExists = false;
     uint64_t fileSize = 0;
-    std::ifstream inFile(path, std::ios::in | std::ios::binary);
+    std::ifstream inFile(this->path, std::ios::in | std::ios::binary);
    
     // Check if the file exists
     if(inFile){
@@ -45,6 +52,9 @@ uint64_t vLog::writeToFile(std::string path, uint64_t offset){
         outFile.write((char*)&entry.Value, entry.Value.size());
     }
 
+    // Update the offset
+    this->head = outFile.tellp();
+
     outFile.close();
 
     //  Clear the entries
@@ -60,20 +70,11 @@ void vLog::insert(uint64_t Key, std::string newVal){
 
     // Add the entry to the entries vector
     this->entries.push_back(entry);
-    this->valNum++;
-}
-
-// Get the value at the index
-std::string vLog::getValbyOffset(uint32_t offset){
-    // Check if the offset is out of range
-    if(offset > this->entries.size())
-        return sstvalue_outOfRange;
-
-    
+    head++;
 }
 
 // Get the value from a file
-std::string vLog::getValFromFile(std::string path, uint64_t offset, size_t length){
+std::string vLog::getValFromFile(std::string path, uint64_t offset, uint32_t length){
     std::ifstream inFile(path, std::ios::in | std::ios::binary);
     if(!inFile)
         return sstvalue_readFile_file;
@@ -85,6 +86,12 @@ std::string vLog::getValFromFile(std::string path, uint64_t offset, size_t lengt
 
     // Check if the offset is out of range
     if(offset > fileSize || (offset + length) > fileSize){
+        inFile.close();
+        return sstvalue_outOfRange;
+    }
+
+    // Check if the offset is within the valid range
+    if(offset <= tail || offset >= head){
         inFile.close();
         return sstvalue_outOfRange;
     }

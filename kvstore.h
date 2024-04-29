@@ -3,6 +3,7 @@
 #include "kvstore_api.h"
 #include "sstable.h"
 #include "memtable.h"
+#include "vLog.h"
 #include <sys/types.h>
 
 class KVStore : public KVStoreAPI
@@ -11,7 +12,7 @@ class KVStore : public KVStoreAPI
 private:
 
 	// Directory for storing sstables
-	std::string dir;
+	std::string SSTdir, vLogdir;
 	// Limited number of sstable in each level
 	std::map<uint64_t, std::string> levelLimit;
 	// Index of sstable in each level
@@ -26,7 +27,7 @@ private:
 
 	// vLog
 	vLog* vlog;
-	uint32_t vlogOffset;
+	uint32_t curvLogOffset;
 
 	// Maintain the current timestamp
 	uint64_t sstMaxTimeStamp = 0;
