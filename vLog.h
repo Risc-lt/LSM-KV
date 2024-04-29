@@ -23,12 +23,32 @@ public:
 
     // Parameterized constructor
     vLogEntry(uint64_t key, std::string value){
-        this->Magic = 0xff;
-        this->Key = key;
-        this->Value = value;
-        this->vlen = value.size();
-        this->Checksum = utils::crc16(value.c_str(), value.size());
-    };
+    this->Magic = 0xff;
+    this->Key = key;
+    this->Value = value;
+    this->vlen = value.size();
+
+    std::vector<unsigned char> data;
+
+    // Add Key to data
+    unsigned char* keyPtr = reinterpret_cast<unsigned char*>(&this->Key);
+    for (size_t i = 0; i < sizeof(this->Key); ++i) {
+        data.push_back(keyPtr[i]);
+    }
+
+    // Add vlen to data
+    unsigned char* vlenPtr = reinterpret_cast<unsigned char*>(&this->vlen);
+    for (size_t i = 0; i < sizeof(this->vlen); ++i) {
+        data.push_back(vlenPtr[i]);
+    }
+
+    // Add Value to data
+    for (const char& c : this->Value) {
+        data.push_back(static_cast<unsigned char>(c));
+    }
+
+    this->Checksum = utils::crc16(data);
+};
 
     // Destructor
     ~vLogEntry(){};

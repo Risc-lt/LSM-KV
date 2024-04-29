@@ -3,7 +3,7 @@
 #include "sstheader.h"
 #include "bloomfilter.h"
 #include "sstindex.h"
-#include "vlog.h"
+#include "vLog.h"
 #include "config.h"
 #include <string>
 #include <cstdint>
