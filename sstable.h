@@ -47,7 +47,7 @@ public:
 
     bool checkIfKeyExist(uint64_t targetKey);
 
-    // std::list<std::pair<uint64_t, std::string>> scan(uint64_t key1, uint64_t key2);
+    void scan(uint64_t key1, uint64_t key2, std::map<uint64_t, std::map<uint64_t, std::string> > &scanMap, vLog vlog);
 
     SStable();
     ~SStable();

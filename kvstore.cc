@@ -170,7 +170,7 @@ std::string KVStore::get(uint64_t key)
 			return res;
 	}
 
-	// 
+	// Check the value is valid
 	if(res == delete_tag || res == memtable_not_exist)
 		return "";
 	else
@@ -182,7 +182,10 @@ std::string KVStore::get(uint64_t key)
  */
 bool KVStore::del(uint64_t key)
 {
-	return false;
+	if(this->get(key) == "")
+		return false;
+	this->put(key, delete_tag);
+	return true;
 }
 
 /**
@@ -191,6 +194,21 @@ bool KVStore::del(uint64_t key)
  */
 void KVStore::reset()
 {
+	// Delete the memtable
+	utils::rmfile(logFilePath);
+	this->memtable->reset();
+	
+	// Delete all the sstables in memory
+	for(auto level = this->levelIndex.begin(); level != this->levelIndex.end(); level++){
+		for(auto sstable = level->second.begin(); sstable != level->second.end(); sstable++){
+			sstable->second->clear();
+			delete sstable->second;
+		}
+	}
+	this->levelIndex.clear();
+
+	// Delete the vlog
+	delete this->vlog;
 }
 
 /**
@@ -200,6 +218,9 @@ void KVStore::reset()
  */
 void KVStore::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, std::string>> &list)
 {
+	// scanMap[key][timestamp] = value
+	std::map<uint64_t, std::map<uint64_t, std::string> > scanMap;
+	std::map<uint64_t, std::string> map;
 }
 
 /**

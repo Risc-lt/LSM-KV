@@ -61,9 +61,12 @@ private:
     std::vector<vLogEntry> entries;
 
 public:
-    //  Get the number of values in the vLog
+    // Get the number of values in the vLog
     uint64_t getHead(){return head;};
     uint64_t getTail(){return tail;};
+
+    // Get the vLog path
+    std::string getPath(){return path;};
 
     // Insert a new value
     void insert(uint64_t Key, std::string newVal);

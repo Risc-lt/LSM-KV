@@ -2,6 +2,7 @@
 #include "config.h"
 #include "utils.h"
 #include <cstdint>
+#include <sys/types.h>
 
 // Default Constructor
 SStable::SStable(){};
@@ -128,29 +129,49 @@ bool SStable::checkIfKeyExist(uint64_t targetKey){
     return this->bloomFliter->find(targetKey);
 }
 
-// // Scan the sstable
-// std::list<std::pair<uint64_t, std::string>> SStable::scan(uint64_t key1, uint64_t key2){
-//     // Store the pair into the list
-//     std::list<std::pair<uint64_t, std::string>> SSTList;
+// Scan the sstable
+void SStable::scan(uint64_t key1, uint64_t key2, std::map<uint64_t, std::map<uint64_t, std::string> > &scanMap, vLog vlog){
+    uint32_t startKeyIndex = this->getKeyIndexByKey(key1);
 
-//     // Get the start index of keys
-//     uint32_t index1 = this->getKeyIndexByKey(key1);
-//     uint32_t index2 = this->getKeyIndexByKey(key2);
+    // Check if the key exists
+    if(startKeyIndex == UINT32_MAX)
+        return;
 
-//     // Check if the keys are within the range
-//     if(index1 == UINT32_MAX || index2 == UINT32_MAX)
-//         return SSTList;
-
-//     // Traverse the sstable and get the key-value pairs
-//     for(uint32_t i = 0; i <= this->getSStableKeyValNum(); i++){
-//         // Get the key and value
-//         uint64_t key = this->getSStableKey(i);
-//         std::string value = this->getSStableValue(i);
-
-//         // Check if the key is within the range
-//         if(key >= key1 && key <= key2 && value != "")
-//             SSTList.push_back(std::make_pair(key, value));
-//     }
-
-//     return SSTList;
-// }
+    // Get the current timestamp
+    uint64_t curSStabelTimeStamp = this->getSStableTimeStamp();
+    for (size_t i = startKeyIndex; i < this->getSStableKeyValNum(); i++)
+    {
+        uint64_t curKey = this->index->getKey(i);
+        if(curKey > key2)
+            break;
+    
+        // If the key does not exist in the scanMap, insert it
+        if(scanMap.count(curKey) == 0 || scanMap[curKey].size() == 0){
+            uint64_t targetOffset = this->getSStableKeyOffset(i);
+            uint32_t targetLength = this->getSStableKeyVlen(i);
+            std::string val = vlog.getValFromFile(vlog.getPath(), targetOffset, targetLength);
+            if(val != delete_tag)
+                scanMap[curKey][curSStabelTimeStamp] = val;
+        }
+        else{
+            // If the key exists in the scanMap, check the timestamp
+            auto iterLatestKV = scanMap[curKey].end();
+            iterLatestKV--;
+            // Cover the old value if the timestamp is larger
+            uint64_t targetOffset = this->getSStableKeyOffset(i);
+            uint32_t targetLength = this->getSStableKeyVlen(i);
+            std::string val = vlog.getValFromFile(vlog.getPath(), targetOffset, targetLength);
+            if(curSStabelTimeStamp >= iterLatestKV->first){
+                if(val != delete_tag){
+                    // Delete the old value to save space
+                    scanMap[curKey].clear();
+                    scanMap[curKey][curSStabelTimeStamp] = val;
+                }
+                // Clear all the old values if the new value is deleted
+                else
+                    scanMap[curKey].clear();
+            }
+            // Do nothing if the timestamp is smaller
+        }
+    }
+}
