@@ -202,6 +202,91 @@ uint32_t vLog::getVlenFromFile(std::string path, uint64_t offset){
     
 }
 
+// Read Magic from a file
+uint8_t vLog::getMagicFromFile(std::string path, uint64_t offset){
+    std::ifstream inFile(path, std::ios::in | std::ios::binary);
+    if(!inFile)
+        return -1;
+
+    // Move fp to the end
+    inFile.seekg(0, std::ios::end);
+    // Get the file size
+    size_t fileSize = inFile.tellg();
+
+    // Check if the offset is out of range
+    if(offset > fileSize){
+        inFile.close();
+        return -1;
+    }
+
+    // Check if the offset is within the valid range
+    if(offset <= tail || offset >= head){
+        inFile.close();
+        return -1;
+    }
+    
+    // Move fp to the offset
+    // Magic(1 Byte) -> Checksum(2 Byte) -> Key(8 Byte) -> vlen(4 Byte) -> Value
+    inFile.seekg(offset-15, std::ios::beg);
+
+    // Read the value
+    char* buffer = new char[sizeof(uint64_t)];
+    inFile.read(buffer, sizeof(uint64_t));
+
+    // Convert the buffer to uint64_t
+    uint32_t res = atoi(buffer);
+
+    inFile.close();
+
+    // Free the buffer
+    delete[] buffer;
+
+    return res;
+    
+}
+
+// Read Checksum from a file
+uint16_t vLog::getChecksumFromFile(std::string path, uint64_t offset){
+    std::ifstream inFile(path, std::ios::in | std::ios::binary);
+    if(!inFile)
+        return -1;
+
+    // Move fp to the end
+    inFile.seekg(0, std::ios::end);
+    // Get the file size
+    size_t fileSize = inFile.tellg();
+
+    // Check if the offset is out of range
+    if(offset > fileSize){
+        inFile.close();
+        return -1;
+    }
+
+    // Check if the offset is within the valid range
+    if(offset <= tail || offset >= head){
+        inFile.close();
+        return -1;
+    }
+    
+    // Move fp to the offset
+    // Magic(1 Byte) -> Checksum(2 Byte) -> Key(8 Byte) -> vlen(4 Byte) -> Value
+    inFile.seekg(offset-14, std::ios::beg);
+
+    // Read the value
+    char* buffer = new char[sizeof(uint64_t)];
+    inFile.read(buffer, sizeof(uint64_t));
+
+    // Convert the buffer to uint64_t
+    uint32_t res = atoi(buffer);
+
+    inFile.close();
+
+    // Free the buffer
+    delete[] buffer;
+
+    return res;
+    
+}
 
 // Read the vLog from a list
 void vLog::readFromList(std::list<std::pair<uint64_t, std::string>> list){

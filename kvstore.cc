@@ -1,6 +1,7 @@
 #include "kvstore.h"
 #include "config.h"
 #include "sstable.h"
+#include "utils.h"
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -495,7 +496,7 @@ void KVStore::gc(uint64_t chunk_size)
 	 *	Step1: scan all vLog entries in the chunk_size
 	 */
 	// Add the key-offset pair in the vlog to the keyOffsetMap
-	std::map<uint64_t, std::map<uint64_t, std::string>> keyOffsetMap; // key -> {offset, value}
+	std::map<uint64_t, std::map<uint64_t, std::string> > keyOffsetMap; // key -> {offset, value}
 
 	// Get the current vlog offset
 	uint64_t curOffset = this->vlog->getTail() + 15; // 8B Key + 4B vlen + 2B Checksum + 1B Magic
@@ -519,7 +520,37 @@ void KVStore::gc(uint64_t chunk_size)
 	/*
 	 *	Step2: Check the latest log for each key
 	 */
-	
-	
+	for(auto iter = keyOffsetMap.begin(); iter != keyOffsetMap.end(); iter++){
+		uint64_t key = iter->first;
+		// Get the latest value from sstable
+		std::string latestValue = this->get(key);
 
+		// Check if the value is valid
+		if(latestValue == iter->second.begin()->second){
+			// Insert the value into the memtable
+			this->put(key, latestValue);
+		}
+	}
+
+	/*
+	 *	Step3: Dig holes in the vlog
+	 */
+	utils::de_alloc_file(this->vlog->getPath(), this->vlog->getTail(), chunk_size);
+	uint64_t newTail = utils::seek_data_block(this->vlog->getPath());
+	
+	// Find the the location of the new tail
+	for(auto iter = keyOffsetMap.begin(); iter != keyOffsetMap.end(); iter++){
+		for(auto iter2 = iter->second.begin(); iter2 != iter->second.end(); iter2++){
+			if(iter2->first-15 >= newTail){
+				newTail = iter2->first-15;
+				break;
+			}
+		}
+	}
+
+	// Check if the tail is valid and update it
+	if()
+	
+	
 }
+	

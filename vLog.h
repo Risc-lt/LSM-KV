@@ -80,6 +80,10 @@ public:
     uint64_t getKeyFromFile(std::string path, uint64_t offset);
     // Read the vlen from a file
     uint32_t getVlenFromFile(std::string path, uint64_t offset);
+    // Read Magic from a file
+    uint8_t getMagicFromFile(std::string path, uint64_t offset);
+    // Read Checksum from a file
+    uint16_t getChecksumFromFile(std::string path, uint64_t offset);
 
     // Read the vLog from a list
     void readFromList(std::list<std::pair<uint64_t, std::string>>);
