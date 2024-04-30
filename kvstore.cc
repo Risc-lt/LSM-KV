@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <string>
 #include <chrono>
+#include <sys/types.h>
 #include <vector>
 
 KVStore::KVStore(const std::string &dir) : KVStoreAPI(dir)
@@ -543,13 +544,31 @@ void KVStore::gc(uint64_t chunk_size)
 		for(auto iter2 = iter->second.begin(); iter2 != iter->second.end(); iter2++){
 			if(iter2->first-15 >= newTail){
 				newTail = iter2->first-15;
-				break;
+
+				// Convert the {key, vlen, value} to data
+				std::vector<unsigned char> data;
+				const unsigned char* keyPtr = reinterpret_cast<const unsigned char*>(&iter->first);
+				const unsigned char* vlenPtr = reinterpret_cast<const unsigned char*>(iter2->second.size());	
+				data.insert(data.end(), keyPtr, keyPtr + sizeof(iter->first));
+				data.insert(data.end(), vlenPtr, vlenPtr + sizeof(iter2->second.size()));
+				data.insert(data.end(), iter2->second.begin(), iter2->second.end());			
+
+				// Get current checksum
+				uint16_t curChecksum = utils::crc16(data);
+
+				// Check if the tail is valid and update it
+				uint8_t magic = this->vlog->getMagicFromFile(this->vlog->getPath(), iter2->first);
+				uint16_t checksum = this->vlog->getChecksumFromFile(this->vlog->getPath(), iter2->first);
+
+				if(magic == 0xff && checksum == curChecksum){
+					this->vlog->setTail(newTail);
+					break;
+				}
 			}
 		}
 	}
 
-	// Check if the tail is valid and update it
-	if()
+
 	
 	
 }

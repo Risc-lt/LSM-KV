@@ -64,6 +64,7 @@ public:
     // Get the number of values in the vLog
     uint64_t getHead(){return head;};
     uint64_t getTail(){return tail;};
+    void setTail(uint64_t newTail){this->tail = newTail;};
 
     // Get the vLog path
     std::string getPath(){return path;};
