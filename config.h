@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 
 // SSTable: Header
 #define sstable_headerSize 32
@@ -17,6 +18,9 @@
 
 // SSTable: Limitation(16*1024)
 #define sstable_maxSize 16384
+
+// SSTable: File num limitation for each level
+#define level_max_file_num(n) pow(2, n+1)
 
 // SSTable: Out of Range
 #define sstable_out_of_range "~![ERROR] Out of Range!~"

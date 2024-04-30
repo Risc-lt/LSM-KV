@@ -2,6 +2,7 @@
 #include "config.h"
 #include "sstable.h"
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <chrono>
 
@@ -252,4 +253,56 @@ void KVStore::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, s
  */
 void KVStore::gc(uint64_t chunk_size)
 {
+}
+
+/**
+ * Check the sstable in each level
+ * Return the level that needs to be merged
+ */
+void KVStore::sstFileCheck(std::string dataPath){
+	// Check if the directory exists
+	if(!utils::dirExists(dataPath)){
+		utils::mkdir(dataPath);
+		return;
+	}
+
+	// Check all the sstables in the directory
+	for(auto &p : std::filesystem::directory_iterator(dataPath)){
+		std::string filePath = p.path();
+		std::string fileName = p.path().filename();
+		std::string level = fileName.substr(6, 1);
+		std::string timestamp = fileName.substr(0, fileName.size() - 4);
+		uint64_t timestampInt = std::stoull(timestamp);
+
+		// Read the sstable
+		SStable* newSSTable = new SStable(filePath);
+		this->levelIndex[std::stoi(level)][timestampInt] = newSSTable;
+
+		// Update the timestamp
+		this->sstMaxTimeStamp = std::max(newSSTable->getSStableTimeStamp(), this->sstMaxTimeStamp);
+	}
+}
+
+/**
+ * Check if the sstable in each level needs to be merged
+ */
+int KVStore::mergeCheck(){
+	// Check if the sstable in each level needs to be merged
+	for(auto level = this->levelIndex.begin(); level != this->levelIndex.end(); level++){
+		// Get the level
+		int levelNum = level->first;
+
+		// Check if the sstable in the level is full
+		if(level->second.size() > level_max_file_num(levelNum)){
+			return level->first;
+		}
+	}
+	return -1;
+}
+
+/**
+ * Merge the sstable in the given two levelw
+ */
+void KVStore::merge(int level){
+	
 }

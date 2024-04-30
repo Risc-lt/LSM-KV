@@ -13,8 +13,6 @@ private:
 
 	// Directory for storing sstables
 	std::string SSTdir, vLogdir;
-	// Limited number of sstable in each level
-	std::map<uint64_t, std::string> levelLimit;
 	// Index of sstable in each level
 	std::map<uint64_t, std::map<uint64_t, SStable*> > levelIndex;
 	
