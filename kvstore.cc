@@ -433,11 +433,62 @@ void KVStore::merge(uint64_t level){
 		sortMapProcessed[iterX->first][iterY->first][iterZ->first] = iterZ->second;
 	}
 
-	// Generate the filename
-	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-	std::chrono::microseconds nstime = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
-	std::string newFilePath = this->SSTdir + "/level-" + std::to_string(level+1) + "/" + std::to_string(nstime.count()) + ".sst";
+	// Convert the sortMapProcessed to entriyMap
+	std::map<uint64_t, std::map<uint64_t, uint32_t> > entriyMap;
+	uint64_t listSSTfileSize = sstable_headerSize + sstable_bfSize;
 
-	// Write the sstable
-	std::map<>
+	for(auto iter = sortMapProcessed.begin(); iter != sortMapProcessed.end(); iter++){
+		uint64_t curKey = iter->first;
+		uint64_t curOffset = iter->second.begin()->second.begin()->first;
+		uint32_t curVlen = iter->second.begin()->second.begin()->second;
+
+		// Update the new sstable file size
+		uint64_t addSize = sstable_keySize + sstable_offsetSize + sstable_vlenSize;
+
+		if(listSSTfileSize + addSize <= sstable_maxSize){
+			listSSTfileSize += addSize;
+			entriyMap[curKey][curOffset] = curVlen;
+		} else{
+			// Write the already stored entries into a new sstable
+			std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+			std::chrono::microseconds nstime = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
+			std::string newFilePath = this->SSTdir + "/level-" + std::to_string(level+1) + "/" + std::to_string(nstime.count()) + ".sst";
+
+			SStable *newSSTable = new SStable(WriteTimeStamp, entriyMap, newFilePath, curvLogOffset);
+			this->levelIndex[level+1][nstime.count()] = newSSTable;
+
+			// Reset the entriyMap and listSSTfileSize
+			entriyMap.clear();
+			listSSTfileSize = sstable_headerSize + sstable_bfSize;
+			entriyMap[curKey][curOffset] = curVlen;
+		}
+	}
+
+	// Write the remaining entries into a new sstable
+	if(entriyMap.size() > 0){
+		// Generate the filename
+		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+		std::chrono::microseconds nstime = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
+		std::string newFilePath = this->SSTdir + "/level-" + std::to_string(level+1) + "/" + std::to_string(nstime.count()) + ".sst";
+
+		SStable *newSSTable = new SStable(WriteTimeStamp, entriyMap, newFilePath, curvLogOffset);
+		this->levelIndex[level+1][nstime.count()] = newSSTable;
+
+		// Reset the entriyMap and listSSTfileSize
+		entriyMap.clear();
+		listSSTfileSize = sstable_headerSize + sstable_bfSize;
+	}
+
+	// Delete the selected old sstables in level X and X+1
+	for(auto iterX = sstableSelect[level].begin(); iterX != sstableSelect[level].end(); iterX++){
+		for(auto iterY = sstableSelect[iterX->first].begin(); iterY != sstableSelect[iterX->first].end(); iterY++){
+			SStable *curtable = iterY->second;
+			curtable->clear();
+
+			if(curtable != NULL)
+				delete curtable;
+			if(levelIndex[iterX->first].count(iterY->first) == 1)
+				levelIndex[iterX->first].erase(iterY->first);
+		}
+	}
 }
