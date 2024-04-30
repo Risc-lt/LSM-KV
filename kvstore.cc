@@ -249,14 +249,6 @@ void KVStore::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, s
 }
 
 /**
- * This reclaims space from vLog by moving valid value and discarding invalid value.
- * chunk_size is the size in byte you should AT LEAST recycle.
- */
-void KVStore::gc(uint64_t chunk_size)
-{
-}
-
-/**
  * Check the sstable in each level
  * Return the level that needs to be merged
  */
@@ -491,4 +483,13 @@ void KVStore::merge(uint64_t level){
 				levelIndex[iterX->first].erase(iterY->first);
 		}
 	}
+}
+
+/**
+ * This reclaims space from vLog by moving valid value and discarding invalid value.
+ * chunk_size is the size in byte you should AT LEAST recycle.
+ */
+void KVStore::gc(uint64_t chunk_size)
+{
+	
 }
