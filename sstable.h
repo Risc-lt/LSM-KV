@@ -33,9 +33,9 @@ public:
 
     // Init a SStable from entries
     SStable(uint64_t setTimeStamp, 
-        std::map<uint64_t, std::map<uint64_t, std::map<uint64_t, uint32_t>> > &entriyMap,
+        std::map<uint64_t, std::map<uint64_t, uint32_t> > &entriyMap,
         std::string setPath, uint64_t curvLogOffset);
-    // entryMap[key][timestamp][offset][vlen]
+    // entryMap:{key, offset, vlen}
 
     // Clear all the data
     void clear();

@@ -81,7 +81,7 @@ SStable::SStable(
 // Constructor from entries
 SStable::SStable(
     uint64_t setTimeStamp,
-    std::map<uint64_t, std::map<uint64_t, std::map<uint64_t, uint32_t>> > &entriyMap,
+    std::map<uint64_t, std::map<uint64_t, uint32_t> > &entriyMap,
     std::string setPath, uint64_t curvLogOffset){
     
     this->path = setPath;
@@ -102,16 +102,12 @@ SStable::SStable(
         MinKey = std::min(MinKey, iter->first);
         MaxKey = std::max(MaxKey, iter->first);
 
-        for(auto iter2 = iter->second.begin(); iter2 != iter->second.end(); iter2++){
-            for(auto iter3 = iter2->second.begin(); iter3 != iter2->second.end(); iter3++){
-                // Insert the key and value
-                this->bloomFliter->insert(iter->first);
-                this->index->insert(iter->first, vLogOffset, iter3->second);
+        // Insert the key and value
+        this->bloomFliter->insert(iter->first);
+        this->index->insert(iter->first, entriyMap[iter->first].begin()->first, entriyMap[iter->first].begin()->second);
 
-                // Update the vLogOffset: Magic(1Byte) + Checksum(2Byte) + Key(8Byte) + vlen(4Byte) + Value
-                vLogOffset += 15 + iter3->second;
-            }
-        }
+        // Update the vLogOffset: Magic(1Byte) + Checksum(2Byte) + Key(8Byte) + vlen(4Byte) + Value
+        vLogOffset += 15 + iter->second.begin()->second;
     }
 
     this->header->minKey = MinKey;

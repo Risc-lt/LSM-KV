@@ -439,5 +439,5 @@ void KVStore::merge(uint64_t level){
 	std::string newFilePath = this->SSTdir + "/level-" + std::to_string(level+1) + "/" + std::to_string(nstime.count()) + ".sst";
 
 	// Write the sstable
-	SStable* newSSTable = new SStable(WriteTimeStamp, sortMapProcessed, newFilePath, curvLogOffset);
+	std::map<>
 }
