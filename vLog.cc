@@ -159,6 +159,50 @@ uint64_t vLog::getKeyFromFile(std::string path, uint64_t offset){
     
 }
 
+// Read the vlen from a file
+uint32_t vLog::getVlenFromFile(std::string path, uint64_t offset){
+    std::ifstream inFile(path, std::ios::in | std::ios::binary);
+    if(!inFile)
+        return -1;
+
+    // Move fp to the end
+    inFile.seekg(0, std::ios::end);
+    // Get the file size
+    size_t fileSize = inFile.tellg();
+
+    // Check if the offset is out of range
+    if(offset > fileSize){
+        inFile.close();
+        return -1;
+    }
+
+    // Check if the offset is within the valid range
+    if(offset <= tail || offset >= head){
+        inFile.close();
+        return -1;
+    }
+    
+    // Move fp to the offset
+    // Key(8 Byte)->vlen(4 Byte)->Value
+    inFile.seekg(offset-4, std::ios::beg);
+
+    // Read the value
+    char* buffer = new char[sizeof(uint64_t)];
+    inFile.read(buffer, sizeof(uint64_t));
+
+    // Convert the buffer to uint64_t
+    uint32_t res = atoi(buffer);
+
+    inFile.close();
+
+    // Free the buffer
+    delete[] buffer;
+
+    return res;
+    
+}
+
+
 // Read the vLog from a list
 void vLog::readFromList(std::list<std::pair<uint64_t, std::string>> list){
     for(auto iter = list.begin(); iter != list.end(); iter++){

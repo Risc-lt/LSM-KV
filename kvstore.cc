@@ -495,27 +495,31 @@ void KVStore::gc(uint64_t chunk_size)
 	 *	Step1: scan all vLog entries in the chunk_size
 	 */
 	// Add the key-offset pair in the vlog to the keyOffsetMap
-	std::map<uint64_t, uint64_t> keyOffsetMap;
+	std::map<uint64_t, std::map<uint64_t, std::string>> keyOffsetMap; // key -> {offset, value}
 
 	// Get the current vlog offset
-	uint64_t curOffset = this->vlog->getTail();
+	uint64_t curOffset = this->vlog->getTail() + 15; // 8B Key + 4B vlen + 2B Checksum + 1B Magic
 	uint64_t curSize = 0;
 
 	// Scan the vlog
 	while(curSize < chunk_size){
 		// Get the key and value offset
 		uint64_t key = this->vlog->getKeyFromFile(this->vLogdir, curOffset);
+		uint32_t vlen = this->vlog->getVlenFromFile(this->vLogdir, curOffset);
+		std::string value = this->vlog->getValFromFile(this->vLogdir, curOffset, vlen);
 		
-
 		// Check if the key is valid
-		if(key != UINT64_MAX && vlen != UINT32_MAX){
-			keyOffsetMap[key] = curOffset;
-			curSize += vlen;
+		if(key != 0 && vlen != 0){
+			keyOffsetMap[key][curOffset] = value;
+			curSize += vlen + 15;
+			curOffset += vlen + 15;
 		}
-
-		// Move to the next entry
-		curOffset = this->vlog->getNextOffsetFromFile(this->vLogdir, curOffset);
 	}
+
+	/*
+	 *	Step2: Check the latest log for each key
+	 */
+	
 	
 
 }

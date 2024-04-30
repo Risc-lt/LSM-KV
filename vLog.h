@@ -73,10 +73,14 @@ public:
 
     // Write the vLog to a file
     uint64_t writeToFile(uint64_t offset);
+
     // Read the value from a file
     std::string getValFromFile(std::string path, uint64_t offset, uint32_t length);
     // Read the key from a file
     uint64_t getKeyFromFile(std::string path, uint64_t offset);
+    // Read the vlen from a file
+    uint32_t getVlenFromFile(std::string path, uint64_t offset);
+
     // Read the vLog from a list
     void readFromList(std::list<std::pair<uint64_t, std::string>>);
 
