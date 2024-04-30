@@ -567,9 +567,5 @@ void KVStore::gc(uint64_t chunk_size)
 			}
 		}
 	}
-
-
-	
-	
 }
 	
