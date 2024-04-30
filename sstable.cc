@@ -78,6 +78,61 @@ SStable::SStable(
     }
 }
 
+// Constructor from entries
+SStable::SStable(
+    uint64_t setTimeStamp,
+    std::map<uint64_t, std::map<uint64_t, std::map<uint64_t, uint32_t>> > &entriyMap,
+    std::string setPath, uint64_t curvLogOffset){
+    
+    this->path = setPath;
+    this->header = new SSTheader();
+    this->bloomFliter = new BloomFilter<uint64_t, sstable_bfSize>();
+    this->index = new SSTIndex();
+
+    // Init the offset in vlog
+    uint64_t vLogOffset = curvLogOffset;
+
+    // Set the header and bloom filter
+    this->header->timeStamp = setTimeStamp;
+    uint64_t MinKey = UINT64_MAX;
+    uint64_t MaxKey = 0;
+
+    for(auto iter = entriyMap.begin(); iter != entriyMap.end(); iter++){
+        // Update the MinKey and MaxKey
+        MinKey = std::min(MinKey, iter->first);
+        MaxKey = std::max(MaxKey, iter->first);
+
+        for(auto iter2 = iter->second.begin(); iter2 != iter->second.end(); iter2++){
+            for(auto iter3 = iter2->second.begin(); iter3 != iter2->second.end(); iter3++){
+                // Insert the key and value
+                this->bloomFliter->insert(iter->first);
+                this->index->insert(iter->first, vLogOffset, iter3->second);
+
+                // Update the vLogOffset: Magic(1Byte) + Checksum(2Byte) + Key(8Byte) + vlen(4Byte) + Value
+                vLogOffset += 15 + iter3->second;
+            }
+        }
+    }
+
+    this->header->minKey = MinKey;
+    this->header->maxKey = MaxKey;
+    this->header->keyValNum = entriyMap.size();
+
+    // Write the sstable to the file
+    this->header->writeToFile(setPath, 0);
+    this->bloomFliter->writeToFile(setPath, sstable_headerSize);
+    this->index->writeToFile(setPath, sstable_headerSize + sstable_bfSize);
+
+    // Read the file again
+    std::ifstream inFile(setPath, std::ios::binary | std::ios::in);
+
+    if(inFile){
+        inFile.seekg(0, std::ios::end);
+        this->fileSize = inFile.tellg();
+        inFile.close();
+    }
+}    
+
 // Destructor
 SStable::~SStable(){
     delete this->header;
@@ -113,6 +168,10 @@ uint32_t SStable::getSStableKeyVlen(uint64_t index){
     
 uint64_t SStable::getSStableKeyOffset(uint64_t index){
     return this->index->getOffset(index);
+}
+
+uint64_t SStable::getSStableKey(uint64_t index){
+    return this->index->getKey(index);
 }
 
 uint64_t SStable::getKeyIndexByKey(uint64_t key){

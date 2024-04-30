@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <string>
 #include <chrono>
+#include <vector>
 
 KVStore::KVStore(const std::string &dir) : KVStoreAPI(dir)
 {
@@ -286,7 +287,7 @@ void KVStore::sstFileCheck(std::string dataPath){
 /**
  * Check if the sstable in each level needs to be merged
  */
-int KVStore::mergeCheck(){
+uint64_t KVStore::mergeCheck(){
 	// Check if the sstable in each level needs to be merged
 	for(auto level = this->levelIndex.begin(); level != this->levelIndex.end(); level++){
 		// Get the level
@@ -303,6 +304,140 @@ int KVStore::mergeCheck(){
 /**
  * Merge the sstable in the given two levelw
  */
-void KVStore::merge(int level){
+void KVStore::merge(uint64_t level){
+	// Check if the target level exists
+	if(level >= this->levelIndex.size()-1){
+		// Create a new level
+		std::string levelPath = this->SSTdir + "/level-" + std::to_string(level+1);
+		utils::mkdir(levelPath.c_str());
+	}
 	
+	/*
+		Step1: select sstables in level X
+	*/
+	std::map<uint64_t, std::map<uint64_t, SStable*> > sstableSelect;
+
+	if(level == 0){
+		// Select the sstables in level 0
+		for(auto sstable = this->levelIndex[0].begin(); sstable != this->levelIndex[0].end(); sstable++){
+			sstableSelect[level][sstable->first] = sstable->second;
+		}
+	} else if(level > 0){
+		uint64_t selectNum = levelIndex[level].size() - level_max_file_num(level);
+		uint64_t alreadyChooseNum = 0;
+
+		// Sort the sstables in the level by timestamp
+		std::map<uint64_t, std::map<uint64_t, SStable*> > sortMap;
+		std::map<uint64_t, std::map<uint64_t, uint64_t> > sstableName;
+
+		for(auto sstable = this->levelIndex[level].begin(); sstable != this->levelIndex[level].end(); sstable++){
+			// sstable->first = timestamp
+			SStable *curTable = sstable->second;
+			uint64_t curTimeStamp = curTable->getSStableTimeStamp();
+			uint64_t minKey = curTable->getSStableMinKey();
+
+			sortMap[curTimeStamp][minKey] = curTable;
+			sstableName[curTimeStamp][minKey] = sstable->first;
+		}
+
+		for(auto iterX = sortMap.begin(); iterX != sortMap.end(); iterX++){
+			for(auto iterY = iterX->second.begin(); iterY != iterX->second.end(); iterY++){
+				if(alreadyChooseNum < selectNum){
+					uint64_t curFileID = sstableName[iterX->first][iterY->first];
+
+					sstableSelect[level][curFileID] = iterY->second;
+					alreadyChooseNum++;
+				}
+			}
+		}
+	}
+
+	/*
+		Step2: select sstables in level X+1
+	*/
+	if(sstableSelect[level].size() > 0){
+		// Get the minKey and maxKey of selected sstables in level X
+		uint64_t LevelXminKey = UINT64_MAX;
+		uint64_t LevelXmaxKey = 0;
+
+		for(auto sstable = sstableSelect[level].begin(); sstable != sstableSelect[level].end(); sstable++){
+			LevelXminKey = std::min(LevelXminKey, sstable->second->getSStableMinKey());
+			LevelXmaxKey = std::max(LevelXmaxKey, sstable->second->getSStableMaxKey());
+		}
+
+		// Tranverse level X+1 to find the sstables that need to be merged
+		for(auto iter = levelIndex[level+1].begin(); iter != levelIndex[level].end(); iter++){
+			
+			SStable *curTable = iter->second;
+			uint64_t curMinKey = curTable->getSStableMinKey();
+			uint64_t curMaxKey = curTable->getSStableMaxKey();
+
+			// Insert to the sstableSelect if the key is covered
+			if(curMinKey >= LevelXminKey && curMaxKey <= LevelXmaxKey){
+				sstableSelect[level+1][iter->first] = curTable;
+			}
+		}
+	}
+
+	/*
+		Step3: merge the sstables selected
+	*/
+	// mergeList[timestamp] = sstable*
+	std::vector<SStable*> mergeList;
+
+	// sortMap[key][timestamp] = {vlen, offset}
+	std::map<uint64_t, std::map<uint64_t, std::map<uint64_t, uint32_t>> > sortMap;
+
+	// Merge the sstables
+	uint64_t WriteTimeStamp = 0;
+
+	// Put the sstables in the mergeList and get the WriteTimeStamp
+	for(auto iterX = sstableSelect.rbegin(); iterX != sstableSelect.rend(); iterX++){
+		for(auto iterY = sstableSelect[iterX->first].rbegin(); iterY != sstableSelect[iterX->first].rend(); iterY++){
+				SStable *curTable = iterY->second;
+				mergeList.push_back(curTable);
+				WriteTimeStamp = std::max(curTable->getSStableTimeStamp(), WriteTimeStamp);
+		}
+	}
+
+	// Get all index entries in selected sstables
+	for(uint64_t i = 0; i < sstableSelect.size(); i++){
+		// iter[timestamp] = sstable*
+		SStable *curtable = mergeList[i];
+		uint64_t KVNum = curtable->getSStableKeyValNum();
+		for(uint64_t i = 0; i < KVNum; i++){
+			uint64_t curKey = curtable->getSStableKey(i);
+			uint64_t curOffset = curtable->getSStableKeyOffset(i);
+			uint32_t curVlen = curtable->getSStableKeyVlen(i);
+			uint64_t curTimeStamp = curtable->getSStableTimeStamp();
+
+			sortMap[curKey][curTimeStamp][curVlen] = curOffset;
+		}
+	}
+
+	// Reprocess the sortMap to remove the deleted key
+	std::map<uint64_t, std::map<uint64_t, std::map<uint64_t, uint32_t>> > sortMapProcessed;
+
+	for(auto iterX = sortMap.begin(); iterX != sortMap.end(); iterX++){
+		auto iterY = iterX->second.end();
+		// iterY[timestamp] = {offset, vlen}
+		iterY--;
+		// iterZ[vlen] = offset
+		auto iterZ = iterY->second.end();
+
+		// Skip the deleted key in the bottom level
+		if(iterZ->second == 0 && levelIndex[level+2].size() == 0)
+			continue;
+
+		// sortMapProcessed[key][timestamp][offset] = vlen
+		sortMapProcessed[iterX->first][iterY->first][iterZ->first] = iterZ->second;
+	}
+
+	// Generate the filename
+	std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+	std::chrono::microseconds nstime = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch());
+	std::string newFilePath = this->SSTdir + "/level-" + std::to_string(level+1) + "/" + std::to_string(nstime.count()) + ".sst";
+
+	// Write the sstable
+	SStable* newSSTable = new SStable(WriteTimeStamp, sortMapProcessed, newFilePath, curvLogOffset);
 }

@@ -4,6 +4,7 @@
 #include "sstable.h"
 #include "memtable.h"
 #include "vLog.h"
+#include <cstdint>
 #include <sys/types.h>
 
 class KVStore : public KVStoreAPI
@@ -34,8 +35,8 @@ private:
 	void sstFileCheck(std::string path);
 
 	// Compact the sstable in level i
-	int mergeCheck();
-	void merge(int level);
+	uint64_t mergeCheck();
+	void merge(uint64_t level);
 
 public:
 	KVStore(const std::string &dir);

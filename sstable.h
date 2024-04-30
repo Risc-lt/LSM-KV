@@ -31,6 +31,12 @@ public:
         std::list <std::pair<uint64_t, std::string> > &list,
         std::string setPath, uint64_t curvLogOffset);
 
+    // Init a SStable from entries
+    SStable(uint64_t setTimeStamp, 
+        std::map<uint64_t, std::map<uint64_t, std::map<uint64_t, uint32_t>> > &entriyMap,
+        std::string setPath, uint64_t curvLogOffset);
+    // entryMap[key][timestamp][offset][vlen]
+
     // Clear all the data
     void clear();
 
@@ -40,8 +46,9 @@ public:
     uint64_t getSStableMaxKey();
     uint64_t getSStableKeyValNum();
 
-    uint32_t getSStableKeyVlen(size_t index);
-    uint64_t getSStableKeyOffset(size_t index);
+    uint32_t getSStableKeyVlen(uint64_t index);
+    uint64_t getSStableKeyOffset(uint64_t index);
+    uint64_t getSStableKey(uint64_t index);
     uint64_t getKeyIndexByKey(uint64_t key);
     // std::string getSStableValue(size_t index);
 
