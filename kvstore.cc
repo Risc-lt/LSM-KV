@@ -491,5 +491,31 @@ void KVStore::merge(uint64_t level){
  */
 void KVStore::gc(uint64_t chunk_size)
 {
+	/*
+	 *	Step1: scan all vLog entries in the chunk_size
+	 */
+	// Add the key-offset pair in the vlog to the keyOffsetMap
+	std::map<uint64_t, uint64_t> keyOffsetMap;
+
+	// Get the current vlog offset
+	uint64_t curOffset = this->vlog->getTail();
+	uint64_t curSize = 0;
+
+	// Scan the vlog
+	while(curSize < chunk_size){
+		// Get the key and value offset
+		uint64_t key = this->vlog->getKeyFromFile(this->vLogdir, curOffset);
+		
+
+		// Check if the key is valid
+		if(key != UINT64_MAX && vlen != UINT32_MAX){
+			keyOffsetMap[key] = curOffset;
+			curSize += vlen;
+		}
+
+		// Move to the next entry
+		curOffset = this->vlog->getNextOffsetFromFile(this->vLogdir, curOffset);
+	}
 	
+
 }
